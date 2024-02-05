@@ -1,5 +1,8 @@
 # Homebridge Technotherm
 
+![Node v18.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node18.yml/badge.svg)
+![Node v20.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node20.yml/badge.svg)
+
 A plugin for instrumenting Technotherm Eletrical Partial Thermal-Storage Heaters in Homebridge.
 
 **Status:** Experimental 🧪
