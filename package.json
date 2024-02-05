@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Technotherm",
   "name": "homebridge-technotherm",
   "version": "1.0.0",
