@@ -58,30 +58,49 @@ export class Technotherm implements DynamicPlatformPlugin {
         this.config.password,
         this.log);
 
-      const homes = await helki.getGroupedDevices();
-      for (const home of homes) {
-        // Loop over the devices and register each one
-        for (const device of home.devs) {
-          const uuid = this.api.hap.uuid.generate(device.dev_id); // Use dev_id to generate a UUID
-          const nodes = await helki.getNodes(device.dev_id);
-          const node = nodes[0];
+      const groups = await helki.getGroupedDevices();
+      // Filter on home if specified
+      const home = groups.find(home => home.name === this.config.home);
 
+      for (const group of groups) {
+        // Loop over the devices and register each one
+        for (const device of group.devs) {
+          const uuid = this.api.hap.uuid.generate(device.dev_id); // Use dev_id to generate a UUID
           const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
           if (existingAccessory) {
-            // Accessory exists, restore from cache
-            this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-            new Radiator(this, existingAccessory, helki);
+            // If the existing accessory is not in the configured home, remove it
+            if (home && existingAccessory?.context.home !== home.name) {
+              this.log.warn(`Removing accessory that does not match configured home "${home.name}: ${existingAccessory.displayName}"`);
+              try {
+                this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
+              } catch (error: unknown) {
+                this.log.warn(`existing accessory: ${error}`);
+              }
+            } else {
+              // Accessory exists, restore from cache
+              this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+              new Radiator(this, existingAccessory, helki);
+            }
           } else {
             // Accessory doesn't exist, add new
-            const accessoryName = `${device.name} (${home.name})`;
-            this.log.info('Adding new accessory:', accessoryName); // Use device name for display name
+            const accessoryName = `${device.name}`;
             const accessory = new this.api.platformAccessory(accessoryName, uuid);
+            const nodes = await helki.getNodes(device.dev_id);
+            const node = nodes[0];
             accessory.context.device = device;
             accessory.context.node = node;
-            accessory.context.home = home.name;
-            new Radiator(this, accessory, helki);
-            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            accessory.context.home = group.name;
+            if (home !== undefined && home.name === group.name) {
+              this.log.info('Adding new accessory:', accessoryName);
+              new Radiator(this, accessory, helki);
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            }
+            if (home === undefined) {
+              this.log.info('Adding new accessory:', accessoryName);
+              new Radiator(this, accessory, helki);
+              this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+            }
           }
         }
       }

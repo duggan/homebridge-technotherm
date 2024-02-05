@@ -22,6 +22,12 @@
         "required": true,
         "format": "password"
       },
+      "home": {
+        "title": "Home",
+        "type": "string",
+        "required": false,
+        "description": "The name of the home you want to restrict Homebridge to displaying. Only required if there's more than one home set up under your account."
+      },
       "apiName": {
         "title": "API Name",
         "type": "string",
