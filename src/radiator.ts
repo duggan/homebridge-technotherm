@@ -39,8 +39,9 @@ export class Radiator {
 
   async setTargetTemperature(value: CharacteristicValue) {
     try {
+      const stemp = Number(value).toFixed(1);
       await this.helkiClient.setStatus(this.accessory.context.device.dev_id, this.node, {
-        stemp: value.toString(),
+        stemp: stemp,
         mode: 'manual',
         units: 'C',
       });
