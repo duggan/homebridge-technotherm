@@ -55,7 +55,8 @@ export class Technotherm implements DynamicPlatformPlugin {
         this.config.clientId,
         this.config.clientSecret,
         this.config.username,
-        this.config.password);
+        this.config.password,
+        this.log);
 
       const homes = await helki.getGroupedDevices();
       for (const home of homes) {
@@ -73,7 +74,7 @@ export class Technotherm implements DynamicPlatformPlugin {
             new Radiator(this, existingAccessory, helki);
           } else {
             // Accessory doesn't exist, add new
-            const accessoryName = `${device.name} (${home.name})`
+            const accessoryName = `${device.name} (${home.name})`;
             this.log.info('Adding new accessory:', accessoryName); // Use device name for display name
             const accessory = new this.api.platformAccessory(accessoryName, uuid);
             accessory.context.device = device;
@@ -85,8 +86,12 @@ export class Technotherm implements DynamicPlatformPlugin {
         }
       }
 
-    } catch (error: any) {
-      this.log.error('Failed to discover devices:', error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        this.log.error(`Failed to discover devices: ${error.message}`);
+      } else {
+        this.log.error(`Failed to discover devices: ${error}`);
+      }
     }
   }
 

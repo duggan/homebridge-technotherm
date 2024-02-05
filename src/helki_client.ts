@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
+import { Logger } from 'homebridge';
 
 interface TokenResponse {
   access_token: string;
@@ -7,16 +8,12 @@ interface TokenResponse {
   expires_in: number;
 }
 
-interface NodeResponse {
-  nodes: Node[];
-}
-
 interface StatusArgs {
-  [key: string]: any;
+  [key: string]: string | number;
 }
 
 interface SetupArgs {
-  [key: string]: any;
+  [key: string]: string | number;
 }
 
 interface PowerLimitResponse {
@@ -93,6 +90,56 @@ interface Status {
   sync_status: string; // Synchronization status, likely read-only
 }
 
+interface SetupResponse {
+  sync_status: 'ok';
+  control_mode: number;
+  units: 'C' | 'F';
+  power: string;
+  offset: string;
+  away_mode: number;
+  away_offset: string;
+  modified_auto_span: number;
+  window_mode_enabled: boolean;
+  true_radiant_enabled: boolean;
+  user_duty_factor: number;
+  flash_version: string;
+  factory_options: {
+    temp_compensation_enabled: boolean;
+    window_mode_available: boolean;
+    true_radiant_available: boolean;
+    duty_limit: number;
+    boost_config: number;
+    button_double_press: boolean;
+    prog_resolution: number;
+    bbc_value: number;
+    bbc_available: boolean;
+    lst_value: number;
+    lst_available: boolean;
+    fil_pilote_available: boolean;
+    backlight_time: number;
+    button_down_code: number;
+    button_up_code: number;
+    button_mode_code: number;
+    button_prog_code: number;
+    button_off_code: number;
+    button_boost_code: number;
+    splash_screen_type: number;
+  };
+  extra_options: {
+    boost_temp: string;
+    boost_time: number;
+    bright_on_level: number;
+    bright_off_level: number;
+    backlight_time: number;
+    beep_active: boolean;
+    language: number;
+    style: number;
+    time_format: number;
+    date_format: number;
+  };
+}
+
+
 
 const MIN_TOKEN_LIFETIME = 60; // seconds
 
@@ -105,6 +152,7 @@ class HelkiClient {
   private axiosInstance: AxiosInstance;
   private accessToken: string;
   private expiresAt: Date;
+  private log: Logger;
 
   constructor(
     apiName: string,
@@ -112,7 +160,7 @@ class HelkiClient {
     clientSecret: string,
     username: string,
     password: string,
-    retryAttempts = 5,
+    log: Logger,
   ) {
     this.apiHost = `https://${apiName}.helki.com`;
     this.clientId = clientId;
@@ -120,6 +168,7 @@ class HelkiClient {
     this.username = username;
     this.password = password;
 
+    this.log = log;
     this.accessToken = '';
     this.expiresAt = new Date();
 
@@ -134,7 +183,7 @@ class HelkiClient {
     }, error => {
       if (error.response) {
         // Log any request error
-        console.log('Request error:', error);
+        this.log.error('Request error:', error);
       }
       return Promise.reject(error);
     });
@@ -146,13 +195,13 @@ class HelkiClient {
     }, error => {
       if (error.response) {
         // Log error details including the response from the server
-        console.log(`Error response from ${error.response.config.url}:`, error.response);
+        this.log.error(`Error response from ${error.response.config.url}:`, error.response);
       }
       return Promise.reject(error);
     });
 
     axiosRetry(this.axiosInstance, {
-      retries: retryAttempts,
+      retries: 5,
       retryDelay: axiosRetry.exponentialDelay,
       retryCondition: (error) => axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
     });
@@ -181,7 +230,7 @@ class HelkiClient {
     this.expiresAt = new Date(Date.now() + expires_in * 1000);
 
     if (expires_in < MIN_TOKEN_LIFETIME) {
-      console.warn(`Token expires in ${expires_in}s, which is below the minimum lifetime of ${MIN_TOKEN_LIFETIME}s.`);
+      this.log.warn(`Token expires in ${expires_in}s, which is below the minimum lifetime of ${MIN_TOKEN_LIFETIME}s.`);
     }
   }
 
@@ -202,7 +251,8 @@ class HelkiClient {
     };
   }
 
-  private async apiRequest<T = any>(path: string, method: 'GET' | 'POST' = 'GET', data?: any): Promise<T> {
+  // eslint-disable-next-line
+  private async apiRequest<T>(path: string, method: 'GET' | 'POST' = 'GET', data?: any): Promise<T> {
     await this.checkRefresh();
     const url = `${this.apiHost}/api/v2/${path}`;
     const headers = this.getHeaders();
@@ -212,8 +262,11 @@ class HelkiClient {
         ? this.axiosInstance.get<T>(url, { headers })
         : this.axiosInstance.post<T>(url, data, { headers }));
       return response.data;
-    } catch (error: any) {
-      throw new Error(`API request to ${path} failed: ${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(`API request to ${path} failed: ${error.message}`);
+      }
+      throw new Error(`API request to ${path} failed: ${error}`);
     }
   }
 
@@ -239,22 +292,23 @@ class HelkiClient {
     await this.apiRequest<void>(`devs/${deviceId}/${node.type}/${node.addr}/status`, 'POST', status);
   }
 
-  public async getSetup(deviceId: string, node: Node): Promise<any> {
+  public async getSetup(deviceId: string, node: Node): Promise<SetupResponse> {
     return this.apiRequest(`devs/${deviceId}/${node.type}/${node.addr}/setup`);
   }
 
-  public async setSetup(deviceId: string, node: Node, setupArgs: SetupArgs): Promise<any> {
+  public async setSetup(deviceId: string, node: Node, setupArgs: SetupArgs): Promise<unknown> {
     let setupData = await this.getSetup(deviceId, node); // Assuming this returns the current setup in a directly usable format
     setupData = { ...setupData, ...setupArgs }; // Merge with new setup arguments
     return this.apiRequest(`devs/${deviceId}/${node.type}/${node.addr}/setup`, 'POST', setupData);
   }
 
-  public async getDeviceAwayStatus(deviceId: string): Promise<any> {
+  public async getDeviceAwayStatus(deviceId: string): Promise<unknown> {
     return this.apiRequest(`devs/${deviceId}/mgr/away_status`);
   }
 
-  public async setDeviceAwayStatus(deviceId: string, statusArgs: StatusArgs): Promise<any> {
-    const data = Object.fromEntries(Object.entries(statusArgs).filter(([_, v]) => v != null));
+  public async setDeviceAwayStatus(deviceId: string, statusArgs: StatusArgs): Promise<unknown> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const data = Object.fromEntries(Object.entries(statusArgs).filter(([_, v]) => v !== null));
     return this.apiRequest(`devs/${deviceId}/mgr/away_status`, 'POST', data);
   }
 

@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { Technotherm } from './platform';
-import { HelkiClient, Node, Status } from './helki_client';
+import { HelkiClient, Node } from './helki_client';
 
 export class Radiator {
   private service: Service;
@@ -9,7 +9,7 @@ export class Radiator {
   constructor(
     private readonly platform: Technotherm,
     private readonly accessory: PlatformAccessory,
-    private readonly helkiClient: HelkiClient
+    private readonly helkiClient: HelkiClient,
   ) {
     // Initialize node from accessory context
     this.node = this.accessory.context.node;
@@ -50,7 +50,7 @@ export class Radiator {
         {
           stemp: value.toString(),
           mode: 'manual',
-          units: 'C'
+          units: 'C',
         });
     } catch (error) {
       this.platform.log.error('Failed to set target temperature:', error);
@@ -84,7 +84,7 @@ export class Radiator {
     } else if (value === this.platform.Characteristic.TargetHeatingCoolingState.AUTO) {
       mode = 'auto'; // Assuming auto control
     } else {
-      mode = 'off'
+      mode = 'off';
     }
     // Set the mode accordingly
     try {
