@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "Technotherm",
+  "name": "homebridge-technotherm",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "Controls for Technotherm electric radiators.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/duggan/homebridge-technotherm.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/duggan/homebridge-technotherm/issues"
   },
   "engines": {
     "node": "^18.17.0 || ^20.9.0",
@@ -24,9 +24,16 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "technotherm",
+    "radiators",
+    "lucht-lhz",
+    "helki"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^1.6.7",
+    "axios-retry": "^4.0.0"
+  },
   "devDependencies": {
     "@types/node": "^18.16.20",
     "@typescript-eslint/eslint-plugin": "^5.62.0",

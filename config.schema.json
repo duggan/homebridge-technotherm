@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "Technotherm",
   "pluginType": "platform",
   "singular": true,
   "schema": {
@@ -9,8 +9,48 @@
         "title": "Name",
         "type": "string",
         "required": true,
-        "default": "Example Dynamic Platform"
+        "default": "Technotherm"
+      },
+      "username": {
+        "title": "Username",
+        "type": "string",
+        "required": true
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true,
+        "format": "password"
+      },
+      "apiName": {
+        "title": "API Name",
+        "type": "string",
+        "required": true,
+        "default": "api-lhz",
+        "description": "Name of API endpoint to use. Default is probably ok."
+      },
+      "clientId": {
+        "title": "Client ID",
+        "type": "string",
+        "required": true,
+        "default": "54bccbfb41a9a5113f0488d0",
+        "description": "Client ID is repurposed from an existing web client or app and shared amongst all users."
+      },
+      "clientSecret": {
+        "title": "Client Secret",
+        "type": "string",
+        "required": true,
+        "default": "vdivdi",
+        "description": "Client Secret is repurposed from an existing web client or app and shared amongst all users."
       }
-    }
+    },
+    "required": [
+      "name",
+      "username",
+      "password",
+      "apiName",
+      "clientId",
+      "clientSecret"
+    ]
   }
 }

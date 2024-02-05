@@ -1,14 +1,15 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import { HelkiClient } from './helki_client';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { ExamplePlatformAccessory } from './platformAccessory';
+import { Radiator } from './radiator';
 
 /**
- * HomebridgePlatform
+ * Technotherm
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
+export class Technotherm implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
 
@@ -45,72 +46,48 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
   }
 
   /**
-   * This is an example method showing how to register discovered accessories.
-   * Accessories must only be registered once, previously created accessories
-   * must not be registered again to prevent "duplicate UUID" errors.
+   * Authenticate with the API to obtain an access token and fetch the list of devices.
    */
-  discoverDevices() {
+  async discoverDevices() {
+    try {
+      const helki = new HelkiClient(
+        this.config.apiName,
+        this.config.clientId,
+        this.config.clientSecret,
+        this.config.username,
+        this.config.password);
 
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    const exampleDevices = [
-      {
-        exampleUniqueId: 'ABCD',
-        exampleDisplayName: 'Bedroom',
-      },
-      {
-        exampleUniqueId: 'EFGH',
-        exampleDisplayName: 'Kitchen',
-      },
-    ];
+      const homes = await helki.getGroupedDevices();
+      for (const home of homes) {
+        // Loop over the devices and register each one
+        for (const device of home.devs) {
+          const uuid = this.api.hap.uuid.generate(device.dev_id); // Use dev_id to generate a UUID
+          const nodes = await helki.getNodes(device.dev_id);
+          const node = nodes[0];
 
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
+          const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
-
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-
-      if (existingAccessory) {
-        // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
-
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
-
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, existingAccessory);
-
-        // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-        // remove platform accessories when no longer present
-        // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [existingAccessory]);
-        // this.log.info('Removing existing accessory from cache:', existingAccessory.displayName);
-      } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.exampleDisplayName);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.exampleDisplayName, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
-
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new ExamplePlatformAccessory(this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          if (existingAccessory) {
+            // Accessory exists, restore from cache
+            this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+            new Radiator(this, existingAccessory, helki);
+          } else {
+            // Accessory doesn't exist, add new
+            const accessoryName = `${device.name} (${home.name})`
+            this.log.info('Adding new accessory:', accessoryName); // Use device name for display name
+            const accessory = new this.api.platformAccessory(accessoryName, uuid);
+            accessory.context.device = device;
+            accessory.context.node = node;
+            accessory.context.home = home.name;
+            new Radiator(this, accessory, helki);
+            this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+          }
+        }
       }
+
+    } catch (error: any) {
+      this.log.error('Failed to discover devices:', error.message);
     }
   }
+
 }
