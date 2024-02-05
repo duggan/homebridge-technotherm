@@ -13,7 +13,8 @@ Potentially can be modified to support a variety of other radiators (e.g. Haverl
 
 Works for me, might work for you! You'll need to be comfortable digging into homebridge code if you want to tinker/add functionality or figure out why something doesn't work, but there's nothing esoteric in there, just wiring up APIs.
 
-## Requirements
+## Requirements
+
 
 * **Username**: username registered with Lucht LHZ app
 * **Password**: password registered with the Lucht LHZ app
