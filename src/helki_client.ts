@@ -263,7 +263,7 @@ class HelkiClient {
       const response = await (method === 'GET'
         ? this.axiosInstance.get<T>(url, { headers })
         : this.axiosInstance.post<T>(url, data, { headers }));
-      this.log.debug(`API request for ${url}${apiData} => ${JSON.stringify(response.data)}`);
+      this.log.debug(`API ${method} request for ${url}${apiData} => ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error: unknown) {
       if (error instanceof Error) {
