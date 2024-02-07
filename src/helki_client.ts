@@ -208,7 +208,7 @@ class HelkiClient {
   }
 
   private async auth(): Promise<void> {
-    this.log.info(`Authenticating with ${this.apiHost}`);
+    this.log.info(`Authenticating via ${this.apiHost}`);
     const tokenUrl = `${this.apiHost}/client/token`;
     const tokenData = new URLSearchParams({
       grant_type: 'password',
@@ -233,7 +233,7 @@ class HelkiClient {
     if (expires_in < MIN_TOKEN_LIFETIME) {
       this.log.warn(`Token expires in ${expires_in}s, which is below the minimum lifetime of ${MIN_TOKEN_LIFETIME}s.`);
     }
-    this.log.info(`Successfully authenticated to ${this.apiHost}`);
+    this.log.info(`Successfully authenticated via ${this.apiHost}`);
   }
 
   private hasTokenExpired(): boolean {
@@ -258,12 +258,12 @@ class HelkiClient {
     await this.checkRefresh();
     const url = `${this.apiHost}/api/v2/${path}`;
     const headers = this.getHeaders();
-    this.log.debug(`API ${method} request to ${url}`);
-
+    const apiData = data ? ` ${JSON.stringify(data)}` : '';
     try {
       const response = await (method === 'GET'
         ? this.axiosInstance.get<T>(url, { headers })
         : this.axiosInstance.post<T>(url, data, { headers }));
+      this.log.debug(`API request for ${url}${apiData} => ${JSON.stringify(response.data)}`);
       return response.data;
     } catch (error: unknown) {
       if (error instanceof Error) {
