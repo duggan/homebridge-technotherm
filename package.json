@@ -1,7 +1,7 @@
 {
   "displayName": "Technotherm",
   "name": "homebridge-technotherm",
-  "version": "1.0.6-beta.0",
+  "version": "1.0.6",
   "description": "Controls for Technotherm electric radiators.",
   "license": "Apache-2.0",
   "repository": {
@@ -21,7 +21,8 @@
     "watch": "npm run build && npm link && nodemon",
     "build": "rimraf ./dist && tsc",
     "pre": "npm run lint && npm run build",
-    "publishBeta": "npm version prepatch --preid beta && npm publish --tag=beta"
+    "makeBeta": "npm version prepatch --preid beta",
+    "publishBeta": "npm publish --tag=beta"
   },
   "keywords": [
     "homebridge-plugin",
