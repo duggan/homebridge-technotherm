@@ -3,7 +3,7 @@
 ![Node v18.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node18.yml/badge.svg)
 ![Node v20.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node20.yml/badge.svg)
 
-A plugin for instrumenting Technotherm Eletrical Partial Thermal-Storage Heaters in Homebridge.
+Technotherm / Lucht LHZ radiators in Apple Home via Homebridge.
 
 **Status:** Experimental 🧪
 
@@ -11,7 +11,7 @@ Potentially can be modified to support a variety of other radiators (e.g. Haverl
 
 ## Audience: developers
 
-Works for me, might work for you! You'll need to be comfortable digging into homebridge code if you want to tinker/add functionality or figure out why something doesn't work, but there's nothing esoteric in there, just wiring up APIs.
+Works for me, might work for you! You'll need to be comfortable digging into Homebridge code if you want to tinker/add functionality or figure out why something doesn't work, but there's nothing esoteric in there, just wiring up APIs.
 
 ## Requirements
 
