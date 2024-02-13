@@ -1,6 +1,6 @@
-import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-import { Technotherm } from './platform';
+import { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 import { HelkiClient, Node } from './helki_client';
+import { Technotherm } from './platform';
 
 export class Radiator {
   private service: Service;
@@ -32,6 +32,7 @@ export class Radiator {
 
   registerCharacteristics() {
     this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature)
+      .setProps({ minStep: 0.5 })
       .onSet(this.setTargetTemperature.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState)
@@ -46,6 +47,7 @@ export class Radiator {
         mode: 'manual',
         units: 'C',
       });
+      await this.pollAndUpdate();
     } catch (error) {
       this.platform.log.error('Failed to set target temperature:', error);
     }
@@ -53,15 +55,19 @@ export class Radiator {
 
   async setTargetHeatingCoolingState(value: CharacteristicValue) {
     let mode: 'manual' | 'auto' | 'off';
-    if (value === this.platform.Characteristic.TargetHeatingCoolingState.HEAT) {
-      mode = 'manual';
-    } else if (value === this.platform.Characteristic.TargetHeatingCoolingState.AUTO) {
-      mode = 'auto';
-    } else {
-      mode = 'off';
+    switch (value) {
+      case this.platform.Characteristic.TargetHeatingCoolingState.HEAT:
+        mode = 'manual';
+        break;
+      case this.platform.Characteristic.TargetHeatingCoolingState.AUTO:
+        mode = 'auto';
+        break;
+      default:
+        mode = 'off';
     }
     try {
       await this.helkiClient.setStatus(this.accessory.context.device.dev_id, this.node, { mode: mode });
+      await this.pollAndUpdate();
     } catch (error) {
       this.platform.log.error('Failed to set target heating/cooling state:', error);
     }
