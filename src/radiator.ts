@@ -5,7 +5,7 @@ import { HelkiClient, Node } from './helki_client';
 export class Radiator {
   private service: Service;
   private node: Node;
-  private pollInterval = 10000; // Poll every 10 seconds
+  private pollInterval: number;
   private pollTimer!: NodeJS.Timeout;
 
   constructor(
@@ -14,6 +14,7 @@ export class Radiator {
     private readonly helkiClient: HelkiClient,
   ) {
     this.node = this.accessory.context.node;
+    this.pollInterval = this.platform.config.pollingInterval * 1000;
 
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Technotherm')

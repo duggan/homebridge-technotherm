@@ -48,6 +48,13 @@
         "required": true,
         "default": "vdivdi",
         "description": "Client Secret is repurposed from an existing web client or app and shared amongst all users."
+      },
+      "pollingInterval": {
+        "title": "Polling Interval",
+        "type": "number",
+        "required": true,
+        "default": 10,
+        "description": "How often (in seconds) to check the API for updates."
       }
     },
     "required": [
