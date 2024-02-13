@@ -47,6 +47,7 @@ export class Radiator {
         mode: 'manual',
         units: 'C',
       });
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, value);
     } catch (error) {
       this.platform.log.error('Failed to set target temperature:', error);
     }
@@ -66,6 +67,7 @@ export class Radiator {
     }
     try {
       await this.helkiClient.setStatus(this.accessory.context.device.dev_id, this.node, { mode: mode });
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, value);
     } catch (error) {
       this.platform.log.error('Failed to set target heating/cooling state:', error);
     }
