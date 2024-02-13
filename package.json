@@ -1,7 +1,7 @@
 {
   "displayName": "Technotherm",
   "name": "homebridge-technotherm",
-  "version": "1.0.9-beta.0",
+  "version": "1.0.9-beta.1",
   "description": "Controls for Technotherm electric radiators.",
   "license": "Apache-2.0",
   "repository": {
