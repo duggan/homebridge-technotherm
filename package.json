@@ -22,7 +22,7 @@
     "build": "rimraf ./dist && tsc",
     "pre": "npm run lint && npm run build",
     "makeBeta": "npm version prepatch --preid beta",
-    "publishBeta": "npm publish --tag=beta"
+    "publishBeta": "npm run build && npm version prerelease && npm publish --tag=beta"
   },
   "keywords": [
     "homebridge-plugin",
