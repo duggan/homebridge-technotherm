@@ -47,6 +47,9 @@ export class Radiator {
         mode: 'manual',
         units: 'C',
       });
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState,
+        this.platform.Characteristic.TargetHeatingCoolingState.HEAT);
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, value);
     } catch (error) {
       this.platform.log.error('Failed to set target temperature:', error);
     }
@@ -70,6 +73,7 @@ export class Radiator {
         {
           mode: mode,
         });
+      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, value);
     } catch (error) {
       this.platform.log.error('Failed to set target heating/cooling state:', error);
     }
