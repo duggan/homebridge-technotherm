@@ -65,16 +65,10 @@ export class Radiator {
         mode = 'off';
     }
 
-    const targetTemperature = this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature).value;
-    // Check if targetTemperature is null, if so, provide a default value
-    const stemp = targetTemperature !== null ? targetTemperature.toString() : '0';
-
     try {
       await this.helkiClient.setStatus(this.accessory.context.device.dev_id, this.node,
         {
           mode: mode,
-          stemp: stemp,
-          units: 'C'
         });
     } catch (error) {
       this.platform.log.error('Failed to set target heating/cooling state:', error);
