@@ -86,10 +86,19 @@ export class Radiator {
       const status = await this.helkiClient.getStatus(this.accessory.context.device.dev_id, this.node);
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, parseFloat(status.mtemp));
       this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, parseFloat(status.stemp));
-      const targetHeatingCoolingState = status.mode === 'auto' ? this.platform.Characteristic.TargetHeatingCoolingState.AUTO :
-        status.mode === 'manual' ? this.platform.Characteristic.TargetHeatingCoolingState.HEAT :
-          this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+      let targetHeatingCoolingState: CharacteristicValue;
+      switch (status.mode) {
+        case 'auto':
+          targetHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.AUTO;
+          break;
+        case 'manual':
+          targetHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.HEAT;
+          break;
+        default:
+          targetHeatingCoolingState = this.platform.Characteristic.TargetHeatingCoolingState.OFF;
+      }
       this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, targetHeatingCoolingState);
+
       const currentHeatingCoolingState = status.active ? this.platform.Characteristic.CurrentHeatingCoolingState.HEAT :
         this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
       this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState, currentHeatingCoolingState);
