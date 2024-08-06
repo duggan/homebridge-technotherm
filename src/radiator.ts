@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { Technotherm } from './platform';
-import { HelkiClient, Node } from './helki_client';
+import { HelkiClient, Node, Status } from './helki_client';
 
 export class Radiator {
   private service: Service;
@@ -26,7 +26,40 @@ export class Radiator {
     this.service.setCharacteristic(this.platform.Characteristic.Name, this.accessory.displayName);
 
     this.registerCharacteristics();
-    this.startPolling();
+
+    this.helkiClient.subscribeToDeviceUpdates(this.accessory.context.device.dev_id, this.onDeviceUpdate.bind(this));
+  }
+
+  onDeviceUpdate(status: Status): void {
+    this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, parseFloat(status.mtemp));
+
+    this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, parseFloat(status.stemp));
+
+    switch (status.mode) {
+      case 'auto':
+      case 'modified_auto':
+        this.service.updateCharacteristic(
+          this.platform.Characteristic.TargetHeatingCoolingState,
+          this.platform.Characteristic.TargetHeatingCoolingState.AUTO,
+        );
+        break;
+      case 'manual':
+        this.service.updateCharacteristic(
+          this.platform.Characteristic.TargetHeatingCoolingState,
+          this.platform.Characteristic.TargetHeatingCoolingState.HEAT,
+        );
+        break;
+      case 'off':
+        this.service.updateCharacteristic(
+          this.platform.Characteristic.TargetHeatingCoolingState,
+          this.platform.Characteristic.TargetHeatingCoolingState.OFF,
+        );
+        break;
+    }
+
+    const currentHeatingCoolingState = status.active ? this.platform.Characteristic.CurrentHeatingCoolingState.HEAT :
+      this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
+    this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState, currentHeatingCoolingState);
   }
 
   registerCharacteristics() {
@@ -52,6 +85,7 @@ export class Radiator {
 
   async setTargetHeatingCoolingState(value: CharacteristicValue) {
     let mode: 'manual' | 'auto' | 'off';
+
     if (value === this.platform.Characteristic.TargetHeatingCoolingState.HEAT) {
       mode = 'manual';
     } else if (value === this.platform.Characteristic.TargetHeatingCoolingState.AUTO) {
@@ -63,36 +97,6 @@ export class Radiator {
       await this.helkiClient.setStatus(this.accessory.context.device.dev_id, this.node, { mode: mode });
     } catch (error) {
       this.platform.log.error('Failed to set target heating/cooling state:', error);
-    }
-  }
-
-  startPolling() {
-    this.pollTimer = setInterval(async () => {
-      await this.pollAndUpdate();
-    }, this.pollInterval);
-  }
-
-  async pollAndUpdate() {
-    try {
-      const status = await this.helkiClient.getStatus(this.accessory.context.device.dev_id, this.node);
-      this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, parseFloat(status.mtemp));
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, parseFloat(status.stemp));
-      const targetHeatingCoolingState = status.mode === 'auto' ? this.platform.Characteristic.TargetHeatingCoolingState.AUTO :
-        status.mode === 'manual' ? this.platform.Characteristic.TargetHeatingCoolingState.HEAT :
-          this.platform.Characteristic.TargetHeatingCoolingState.OFF;
-      this.service.updateCharacteristic(this.platform.Characteristic.TargetHeatingCoolingState, targetHeatingCoolingState);
-      const currentHeatingCoolingState = status.active ? this.platform.Characteristic.CurrentHeatingCoolingState.HEAT :
-        this.platform.Characteristic.CurrentHeatingCoolingState.OFF;
-      this.service.updateCharacteristic(this.platform.Characteristic.CurrentHeatingCoolingState, currentHeatingCoolingState);
-    } catch (error) {
-      this.platform.log.error('Failed to poll device status:', error);
-    }
-  }
-
-  // Call this method when the plugin is shutting down to clean up resources
-  stopPolling() {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
     }
   }
 }

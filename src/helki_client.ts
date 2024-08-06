@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import axiosRetry from 'axios-retry';
 import { Logger } from 'homebridge';
+import io from 'socket.io-client';
 
 interface TokenResponse {
   access_token: string;
@@ -56,7 +57,7 @@ interface SetStatus {
 
 interface Status {
   // Common fields for getStatus response and setStatus request
-  mode: 'auto' | 'manual' | 'off';
+  mode: 'auto' | 'manual' | 'off' | 'modified_auto';
   units: 'C' | 'F'; // Temperature units
 
   // Temperature settings
@@ -155,6 +156,8 @@ class HelkiClient {
   private expiresAt: Date;
   private log: Logger;
 
+  private socketNamespace = '/api/v2/socket_io';
+
   constructor(
     apiName: string,
     clientId: string,
@@ -205,6 +208,23 @@ class HelkiClient {
       retries: 5,
       retryDelay: axiosRetry.exponentialDelay,
       retryCondition: (error) => axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
+    });
+  }
+
+  async subscribeToDeviceUpdates(deviceId: string, callback: (status: Status) => void): Promise<void> {
+    await this.checkRefresh();
+
+    const socket = io(this.apiHost + this.socketNamespace, {
+      query: {
+        token: this.accessToken,
+        dev_id: deviceId,
+      },
+    });
+
+    socket.on('update', (data) => {
+      this.log.debug(`Device ${deviceId} updated:`, data);
+
+      callback(data.body);
     });
   }
 
