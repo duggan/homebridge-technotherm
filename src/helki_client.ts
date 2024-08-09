@@ -226,6 +226,37 @@ class HelkiClient {
 
       callback(data.body);
     });
+
+    socket.on('connect_timeout', () => {
+      this.log.warn('Socket connection timed out');
+    });
+
+    socket.on('reconnecting', async (attempt) => {
+      this.log.info('Reconnecting to socket. Attempt: ', attempt);
+
+      await this.checkRefresh();
+      socket.io.opts.query.token = this.accessToken;
+    });
+
+    socket.on('reconnect_error', (error) => {
+      this.log.error('Socket reconnection failed: ', error);
+    });
+
+    socket.on('connect_error', (error) => {
+      this.log.error('Socket connection failed: ', error);
+    });
+
+    socket.on('disconnect', async (data) => {
+      this.log.debug('Socket disconnected, attempting reconnect: ', data);
+
+      await this.checkRefresh();
+      socket.io.opts.query.token = this.accessToken;
+      socket.connect();
+    });
+
+    socket.on('connect', () => {
+      this.log.debug('Connected to socket');
+    });
   }
 
   private async auth(): Promise<void> {
