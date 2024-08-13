@@ -32,7 +32,7 @@
     "helki"
   ],
   "dependencies": {
-    "axios": "^1.6.7",
+    "axios": "^1.7.3",
     "axios-retry": "^4.0.0",
     "socket.io-client": "^2.5.0"
   },
