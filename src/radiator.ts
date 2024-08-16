@@ -5,8 +5,6 @@ import { HelkiClient, Node, Status } from './helki_client';
 export class Radiator {
   private service: Service;
   private node: Node;
-  private pollInterval = 10000; // Poll every 10 seconds
-  private pollTimer!: NodeJS.Timeout;
 
   constructor(
     private readonly platform: Technotherm,
@@ -31,9 +29,11 @@ export class Radiator {
   }
 
   onDeviceUpdate(status: Status): void {
-    this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, parseFloat(status.mtemp));
+    const currentTemperature = status.mtemp ? parseFloat(status.mtemp) : 0;
+    const targetTemperature = status.stemp ? parseFloat(status.stemp) : 0;
 
-    this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, parseFloat(status.stemp));
+    this.service.updateCharacteristic(this.platform.Characteristic.CurrentTemperature, currentTemperature);
+    this.service.updateCharacteristic(this.platform.Characteristic.TargetTemperature, targetTemperature);
 
     switch (status.mode) {
       case 'auto':
@@ -63,6 +63,16 @@ export class Radiator {
   }
 
   registerCharacteristics() {
+    // Set the properties of TargetTemperature characteristic to allow temperatures down to 1°C
+    this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature)
+      .setProps({
+        minValue: 1,
+        maxValue: 40,
+        minStep: 0.5,
+      })
+      .onSet(this.setTargetTemperature.bind(this));
+
+
     this.service.getCharacteristic(this.platform.Characteristic.TargetTemperature)
       .onSet(this.setTargetTemperature.bind(this));
 
