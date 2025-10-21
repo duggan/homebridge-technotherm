@@ -2,6 +2,7 @@
 
 ![Node v18.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node18.yml/badge.svg)
 ![Node v20.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node20.yml/badge.svg)
+![Node v22.x](https://github.com/duggan/homebridge-technotherm/actions/workflows/build_node22.yml/badge.svg)
 
 Technotherm / Lucht LHZ radiators in Apple Home via Homebridge.
 
