@@ -1,7 +1,7 @@
 {
   "displayName": "Technotherm",
   "name": "homebridge-technotherm",
-  "version": "1.2.4",
+  "version": "1.2.6-beta.0",
   "description": "Controls for Technotherm electric radiators.",
   "license": "Apache-2.0",
   "repository": {
@@ -12,7 +12,7 @@
     "url": "https://github.com/duggan/homebridge-technotherm/issues"
   },
   "engines": {
-    "node": "^18.17.0 || ^20.9.0",
+    "node": "^18.20.4 || ^20.15.1 || ^22",
     "homebridge": "^1.6.0"
   },
   "main": "dist/index.js",
@@ -32,19 +32,19 @@
     "helki"
   ],
   "dependencies": {
-    "axios": "^1.7.4",
+    "axios": "^1.12.2",
     "axios-retry": "^4.0.0",
     "socket.io-client": "^2.5.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
-    "@typescript-eslint/eslint-plugin": "^7.10.0",
-    "@typescript-eslint/parser": "^7.10.0",
-    "eslint": "^8.45.0",
-    "homebridge": "^1.6.0",
-    "nodemon": "^3.0.3",
-    "rimraf": "^5.0.5",
+    "@types/node": "^20.19.23",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "homebridge": "^1.11.0",
+    "nodemon": "^3.1.10",
+    "rimraf": "^5.0.10",
     "ts-node": "^10.9.1",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }
