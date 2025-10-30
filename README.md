@@ -6,7 +6,7 @@
 
 Technotherm / Lucht LHZ radiators in Apple Home via Homebridge.
 
-**Status:** Experimental 🧪
+**Status:** Functional ⚙️
 
 Potentially can be modified to support a variety of other radiators (e.g. Haverland) that use the same cloud service for configuration (api.helki.com).
 
